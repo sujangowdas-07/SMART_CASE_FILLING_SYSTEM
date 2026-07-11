@@ -1,0 +1,55 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: LegalEase
+
+  datasource:
+    url: jdbc:h2:mem:legalease
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+# JWT Configuration
+app:
+  jwt:
+    secret: LegalEaseSecretKeyForJWTTokenGeneration2026VeryLongAndSecureKeyThatIsAtLeast256BitsLong
+    expiration-ms: 86400000  # 24 hours
+
+  # File upload directory
+  upload:
+    dir: ./uploads
+
+  # AI Service URL
+  ai-service:
+    url: http://localhost:8000
+
+logging:
+  level:
+    com.legalease: DEBUG
+    org.springframework.security: INFO

@@ -1,0 +1,633 @@
+# LegalEase — AI-Powered Smart Legal Case Management Platform
+
+## Implementation Plan
+
+> [!NOTE]
+> This is a **final year project** — we will build a fully functional, production-quality prototype that demonstrates all core features. Some enterprise-scale features (SMS via Twilio, AWS S3, real OAuth providers) will be simulated with mock/local alternatives to keep costs zero during development.
+
+---
+
+## Project Architecture
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (React + Vite)"]
+        A[React 18 + React Router]
+        B[Tailwind CSS + MUI Components]
+        C[Axios API Layer]
+        D[Context API / Zustand State]
+    end
+
+    subgraph Backend["Backend (Spring Boot)"]
+        E[REST Controllers]
+        F[Service Layer]
+        G[Spring Security + JWT]
+        H[Spring Data JPA]
+        I[WebSocket - Chat/Notifications]
+    end
+
+    subgraph AI["AI Microservice (Python FastAPI)"]
+        J[Gemini API Integration]
+        K[Case Classification NLP]
+        L[Document Summarization]
+        M[Legal Chatbot]
+        N[Risk Analysis Engine]
+    end
+
+    subgraph DB["Database (MySQL)"]
+        O[(Users)]
+        P[(Cases)]
+        Q[(Documents)]
+        R[(Lawyers)]
+        S[(Courts)]
+        T[(Hearings)]
+        U[(Messages)]
+        V[(Notifications)]
+    end
+
+    A --> C --> E
+    E --> F --> H --> DB
+    F --> AI
+    E --> G
+    E --> I
+```
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Technology Decisions — Please Confirm:**
+> 1. **Vite vs CRA**: I recommend **Vite** for the React frontend (faster builds, modern tooling). Your prompt mentions React.js — Vite is the current best practice for React apps. OK?
+> 2. **Tailwind CSS Version**: Your prompt specifies Tailwind CSS. I'll use **Tailwind CSS v3** with the JIT compiler. OK?
+> 3. **MySQL**: Do you have MySQL installed locally? If not, I can set up an **H2 in-memory database** for development and provide MySQL schema for production.
+> 4. **Gemini API Key**: For the AI features (case classification, chatbot, summarization), do you have a **Google Gemini API key**? If not, I'll build the integration with a mock fallback so the app works without one.
+> 5. **File Storage**: Instead of AWS S3 (which costs money), I'll use **local file storage** for the prototype and structure the code so you can swap to S3/Cloudinary later. OK?
+> 6. **Maps**: Instead of Google Maps API (which requires billing), I'll use **OpenStreetMap + Leaflet.js** (free). OK?
+
+> [!WARNING]
+> **Scope Management**: This is a very large project. I will build it in **phases** — delivering a working system at each phase. Phase 1 gives you a demo-ready MVP. Later phases add advanced features.
+
+---
+
+## Open Questions
+
+1. **Java Version**: Do you have **JDK 17+** installed? Spring Boot 3.x requires it.
+2. **Python Version**: Do you have **Python 3.10+** installed for the FastAPI microservice?
+3. **Node.js Version**: Do you have **Node.js 18+** installed?
+4. **Port Preferences**: I'll use `3000` (frontend), `8080` (Spring Boot), `8000` (FastAPI). Any conflicts?
+5. **Email Service**: For email verification, should I use a real SMTP (like Gmail) or a mock email logger for development?
+6. **Kannada Language Support**: For the voice complaint and chatbot — should this be a full translation or just basic support?
+
+---
+
+## Proposed Changes — Phased Delivery
+
+### Project Structure
+
+```
+c:\Users\Sujan\major project\
+├── frontend/                    # React + Vite + Tailwind + MUI
+│   ├── src/
+│   │   ├── api/                 # Axios service layer
+│   │   ├── assets/              # Images, icons, fonts
+│   │   ├── components/          # Reusable UI components
+│   │   │   ├── common/          # Buttons, Inputs, Modals, Cards
+│   │   │   ├── layout/          # Navbar, Sidebar, Footer
+│   │   │   ├── case/            # Case-related components
+│   │   │   ├── chat/            # Messaging components
+│   │   │   └── dashboard/       # Dashboard widgets
+│   │   ├── contexts/            # Auth, Theme, Notification contexts
+│   │   ├── hooks/               # Custom React hooks
+│   │   ├── pages/               # Route-level page components
+│   │   │   ├── auth/            # Login, Register, Verify, Reset
+│   │   │   ├── citizen/         # Citizen dashboard & case filing
+│   │   │   ├── lawyer/          # Lawyer portal
+│   │   │   ├── judge/           # Judge portal
+│   │   │   ├── admin/           # Admin dashboard
+│   │   │   └── shared/          # Case workspace, profile, etc.
+│   │   ├── utils/               # Helpers, constants, validators
+│   │   └── App.jsx
+│   ├── index.html
+│   ├── tailwind.config.js
+│   ├── vite.config.js
+│   └── package.json
+│
+├── backend/                     # Spring Boot Application
+│   ├── src/main/java/com/legalease/
+│   │   ├── LegalEaseApplication.java
+│   │   ├── config/              # Security, CORS, WebSocket config
+│   │   ├── controller/          # REST API controllers
+│   │   ├── dto/                 # Request/Response DTOs
+│   │   ├── entity/              # JPA Entities
+│   │   ├── enums/               # Role, Status, Category enums
+│   │   ├── exception/           # Global exception handler
+│   │   ├── repository/          # Spring Data JPA repositories
+│   │   ├── security/            # JWT filter, provider, utils
+│   │   ├── service/             # Business logic services
+│   │   └── util/                # Utility classes
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│   │   └── data.sql             # Seed data
+│   ├── pom.xml
+│   └── mvnw / mvnw.cmd
+│
+├── ai-service/                  # Python FastAPI Microservice
+│   ├── main.py
+│   ├── routers/
+│   │   ├── classification.py   # Case classification
+│   │   ├── chatbot.py          # Legal assistant chatbot
+│   │   ├── summarization.py    # Document summarization
+│   │   └── risk_analysis.py    # Risk analysis
+│   ├── services/
+│   │   ├── gemini_service.py   # Gemini API wrapper
+│   │   └── nlp_service.py      # NLP utilities
+│   ├── requirements.txt
+│   └── .env
+│
+└── README.md
+```
+
+---
+
+## Phase 1 — Core Foundation (MVP)
+
+This phase delivers: authentication, case filing, dashboards for all 5 roles, and basic navigation.
+
+---
+
+### 1.1 Frontend Setup & Design System
+
+#### [NEW] `frontend/` — Complete React + Vite Project
+
+- Initialize with `npx create-vite`
+- Install Tailwind CSS v3, Material UI, React Router, Axios, Zustand
+- Create design system: color palette (deep navy + gold + white), typography (Inter/Outfit fonts), spacing tokens
+- Build reusable components: Button, Input, Card, Modal, Badge, Avatar, DataTable, StatusChip
+
+**Design Language:**
+- Dark navy sidebar (`#0f172a`) with gold accents (`#d4a853`)
+- Glassmorphism cards with subtle backdrop-blur
+- Smooth page transitions with Framer Motion
+- Gradient hero sections
+- Professional legal aesthetic with modern feel
+
+---
+
+### 1.2 Authentication System
+
+#### [NEW] `frontend/src/pages/auth/`
+- `LoginPage.jsx` — Email + password login with role selection
+- `RegisterPage.jsx` — Multi-step registration (role → personal info → verification)
+- `ForgotPasswordPage.jsx` — Password reset flow
+- `VerifyEmailPage.jsx` — Email verification page
+
+#### [NEW] `backend/.../security/`
+- `JwtTokenProvider.java` — JWT token generation & validation
+- `JwtAuthenticationFilter.java` — Request filter for JWT
+- `SecurityConfig.java` — Spring Security configuration with RBAC
+
+#### [NEW] `backend/.../controller/AuthController.java`
+- `POST /api/auth/register` — Registration with role
+- `POST /api/auth/login` — Login, returns JWT
+- `POST /api/auth/verify-email` — Email verification
+- `POST /api/auth/forgot-password` — Password reset
+- `GET /api/auth/me` — Current user profile
+
+---
+
+### 1.3 Database Schema
+
+#### [NEW] `backend/.../entity/`
+
+**Core Entities:**
+
+| Entity | Key Fields |
+|--------|-----------|
+| `User` | id, name, email, password, role, phone, address, aadhaarNumber, profilePhoto, emailVerified, active, createdAt |
+| `Case` | id, caseNumber, title, description, category, status, petitionerId, respondentId, petitionerLawyerId, respondentLawyerId, judgeId, courtId, filingDate, priority |
+| `Document` | id, caseId, uploadedBy, fileName, fileType, filePath, category, verificationStatus, verifiedBy, version, uploadedAt |
+| `Lawyer` | id, userId, barCouncilId, specialization, experience, rating, casesHandled, isVerified, bio, priceRange |
+| `Court` | id, name, type, address, city, state, latitude, longitude, jurisdiction |
+| `Hearing` | id, caseId, judgeId, hearingDate, location, remarks, nextHearingDate, orders, status |
+| `Notification` | id, userId, title, message, type, isRead, relatedCaseId, createdAt |
+| `Message` | id, senderId, receiverId, caseId, content, timestamp, isRead |
+| `AuditLog` | id, userId, action, entityType, entityId, details, ipAddress, timestamp |
+
+---
+
+### 1.4 Role-Based Dashboards
+
+#### [NEW] `frontend/src/pages/citizen/CitizenDashboard.jsx`
+- My Cases list with status badges
+- Quick actions: File New Case, Find Lawyer
+- Recent notifications
+- Case statistics cards
+
+#### [NEW] `frontend/src/pages/lawyer/LawyerDashboard.jsx`
+- Active cases
+- Pending case requests
+- Upcoming hearings calendar
+- Client list
+- Performance stats
+
+#### [NEW] `frontend/src/pages/judge/JudgeDashboard.jsx`
+- Assigned cases
+- Today's hearings
+- Pending reviews
+- Recent updates feed
+- Case search by Case ID
+
+#### [NEW] `frontend/src/pages/admin/AdminDashboard.jsx`
+- System overview cards (total users, cases, lawyers, courts)
+- Analytics charts (Chart.js / Recharts)
+- Quick actions: Verify Lawyers, Manage Users
+- Recent audit logs
+
+---
+
+### 1.5 Case Filing Module
+
+#### [NEW] `frontend/src/pages/citizen/FileCase.jsx`
+- Multi-step form wizard:
+  1. **Category Selection** — Visual cards for each case type
+  2. **Complaint Details** — Rich text editor for complaint
+  3. **AI Classification** — Shows AI-suggested category, court type, required docs
+  4. **Respondent Info** — Name, address, contact of opposing party
+  5. **Document Upload** — Drag-and-drop file upload with preview
+  6. **Review & Submit** — Summary before filing
+
+#### [NEW] `backend/.../controller/CaseController.java`
+- `POST /api/cases` — File new case
+- `GET /api/cases` — List cases (filtered by role)
+- `GET /api/cases/{id}` — Case details
+- `PUT /api/cases/{id}/status` — Update status
+- `GET /api/cases/{id}/timeline` — Case timeline
+
+---
+
+## Phase 2 — AI Features & Document Management
+
+### 2.1 AI Case Classification
+
+#### [NEW] `ai-service/routers/classification.py`
+- Accepts complaint text
+- Calls Gemini API to classify:
+  - Case category (Civil, Criminal, Family, etc.)
+  - Relevant court type
+  - Required documents list
+  - Severity assessment
+
+#### [NEW] `backend/.../controller/AIController.java`
+- `POST /api/ai/classify` — Proxy to FastAPI classification
+- `POST /api/ai/summarize` — Document summarization
+- `POST /api/ai/chat` — Legal chatbot
+
+### 2.2 Document Upload & Verification
+
+#### [NEW] `backend/.../controller/DocumentController.java`
+- `POST /api/documents/upload` — Upload with multipart
+- `GET /api/documents/case/{caseId}` — List case documents
+- `PUT /api/documents/{id}/verify` — Admin verification
+- `GET /api/documents/{id}/download` — Download document
+
+#### [NEW] `frontend/src/components/case/DocumentUpload.jsx`
+- Drag-and-drop zone
+- File type validation (PDF, images, video, audio)
+- Upload progress bar
+- Document preview
+- Verification status badges
+
+### 2.3 AI Legal Chatbot
+
+#### [NEW] `frontend/src/components/common/LegalChatbot.jsx`
+- Floating chat widget (bottom-right corner)
+- Conversational interface
+- Answers legal FAQs
+- Suggests case categories
+- Explains filing process
+- Multi-language support (English + Kannada)
+
+#### [NEW] `ai-service/routers/chatbot.py`
+- Gemini-powered conversational agent
+- System prompt tuned for Indian legal context
+- Bilingual responses
+
+---
+
+## Phase 3 — Lawyer & Court Recommendations
+
+### 3.1 Lawyer Recommendation System
+
+#### [NEW] `backend/.../controller/LawyerController.java`
+- `GET /api/lawyers` — Search with filters (specialization, location, rating)
+- `GET /api/lawyers/{id}` — Lawyer profile
+- `POST /api/lawyers/{id}/request` — Request lawyer for case
+- `PUT /api/lawyers/requests/{id}/respond` — Accept/reject request
+
+#### [NEW] `frontend/src/pages/citizen/FindLawyer.jsx`
+- Search & filter panel
+- Lawyer cards with profile photo, specialization, rating, experience
+- Detailed profile modal
+- "Request Lawyer" flow
+- AI-powered recommendation badges
+
+### 3.2 Court Recommendation
+
+#### [NEW] `frontend/src/pages/citizen/CourtFinder.jsx`
+- Interactive map (Leaflet + OpenStreetMap)
+- Court markers with info popups
+- Distance calculation
+- Jurisdiction matching
+- Directions link
+
+---
+
+## Phase 4 — Case Workspace & Communication
+
+### 4.1 Shared Case Workspace
+
+#### [NEW] `frontend/src/pages/shared/CaseWorkspace.jsx`
+- Tabbed interface:
+  - **Overview** — Case info, status, participants
+  - **Timeline** — Visual step-by-step timeline
+  - **Documents** — Document repository with role-based access
+  - **Hearings** — Hearing history & schedule
+  - **Messages** — Case-specific chat
+  - **Notes** — Lawyer/Judge remarks
+
+### 4.2 Messaging System
+
+#### [NEW] `backend/.../controller/MessageController.java`
+- WebSocket endpoint for real-time chat
+- `GET /api/messages/{caseId}` — Chat history
+- `POST /api/messages` — Send message
+
+#### [NEW] `frontend/src/components/chat/ChatWindow.jsx`
+- Real-time messaging with WebSocket
+- Message bubbles with timestamps
+- File attachment support
+- Read receipts
+
+### 4.3 Notification System
+
+#### [NEW] `backend/.../service/NotificationService.java`
+- In-app notifications (stored in DB)
+- Email notifications (JavaMail / mock)
+- WebSocket push for real-time
+
+#### [NEW] `frontend/src/components/layout/NotificationBell.jsx`
+- Notification dropdown in navbar
+- Unread count badge
+- Mark as read
+- Link to relevant case
+
+---
+
+## Phase 5 — Judge Portal & Hearing Management
+
+### 5.1 Judge Features
+
+#### [NEW] `frontend/src/pages/judge/`
+- `CaseReview.jsx` — Document viewer, remarks, observations
+- `HearingScheduler.jsx` — Schedule hearings with date picker
+- `JudgeNotes.jsx` — Add hearing notes and orders
+
+#### [NEW] `backend/.../controller/HearingController.java`
+- `POST /api/hearings` — Schedule hearing
+- `PUT /api/hearings/{id}` — Update hearing (remarks, next date)
+- `GET /api/hearings/judge/{judgeId}` — Judge's hearings
+- `GET /api/hearings/case/{caseId}` — Case hearings
+
+---
+
+## Phase 6 — Admin Panel & Analytics
+
+### 6.1 Admin Management
+
+#### [NEW] `frontend/src/pages/admin/`
+- `UserManagement.jsx` — CRUD users, role assignment, deactivation
+- `LawyerVerification.jsx` — Verify/reject lawyer registrations
+- `CaseManagement.jsx` — Overview, assign judges, manage status
+- `SystemAnalytics.jsx` — Charts and reports
+
+### 6.2 Analytics Dashboard
+
+- Total cases, active, closed (animated counters)
+- Monthly filing trends (line chart)
+- Case category distribution (pie/doughnut chart)
+- Disposal rate (bar chart)
+- Lawyer performance table
+- Court load distribution
+
+Using: **Recharts** for beautiful, responsive charts
+
+---
+
+## Phase 7 — Advanced AI Features
+
+### 7.1 Voice Complaint Filing
+- Web Speech API for browser-based speech-to-text
+- Support for English and basic Kannada
+- Auto-fill complaint form from transcription
+
+### 7.2 AI Document Summarization
+- Upload legal document → AI generates summary, key dates, important sections
+- Displayed in case workspace
+
+### 7.3 AI Risk Analysis
+- Analyze case details → Filing readiness score, missing documents, verification score
+- Visual score cards with progress rings
+
+### 7.4 AI Timeline Generator
+- Automatically generate case timeline from uploaded documents
+
+---
+
+## Database ER Diagram
+
+```mermaid
+erDiagram
+    USER ||--o{ CASE_PETITIONER : files
+    USER ||--o{ CASE_RESPONDENT : "is respondent in"
+    USER ||--o{ DOCUMENT : uploads
+    USER ||--o{ MESSAGE : sends
+    USER ||--o{ NOTIFICATION : receives
+    USER ||--|| LAWYER : "may be"
+    
+    CASE ||--o{ DOCUMENT : contains
+    CASE ||--o{ HEARING : has
+    CASE ||--o{ MESSAGE : "has chat"
+    CASE ||--|{ COURT : "assigned to"
+    
+    LAWYER ||--o{ CASE : represents
+    
+    HEARING ||--|| USER : "judged by"
+    
+    USER {
+        bigint id PK
+        varchar name
+        varchar email UK
+        varchar password
+        enum role
+        varchar phone
+        text address
+        varchar aadhaar_number
+        varchar profile_photo
+        boolean email_verified
+        boolean active
+        timestamp created_at
+    }
+    
+    CASE_PETITIONER {
+        bigint id PK
+        varchar case_number UK
+        varchar title
+        text description
+        enum category
+        enum status
+        bigint petitioner_id FK
+        bigint respondent_id FK
+        bigint petitioner_lawyer_id FK
+        bigint respondent_lawyer_id FK
+        bigint judge_id FK
+        bigint court_id FK
+        date filing_date
+    }
+
+    DOCUMENT {
+        bigint id PK
+        bigint case_id FK
+        bigint uploaded_by FK
+        varchar file_name
+        varchar file_type
+        varchar file_path
+        enum category
+        enum verification_status
+        int version
+        timestamp uploaded_at
+    }
+    
+    LAWYER {
+        bigint id PK
+        bigint user_id FK
+        varchar bar_council_id
+        varchar specialization
+        int experience_years
+        float rating
+        int cases_handled
+        boolean is_verified
+        text bio
+    }
+    
+    COURT {
+        bigint id PK
+        varchar name
+        varchar type
+        text address
+        varchar city
+        varchar state
+        double latitude
+        double longitude
+    }
+
+    HEARING {
+        bigint id PK
+        bigint case_id FK
+        bigint judge_id FK
+        datetime hearing_date
+        varchar location
+        text remarks
+        date next_hearing_date
+        text orders
+        enum status
+    }
+    
+    NOTIFICATION {
+        bigint id PK
+        bigint user_id FK
+        varchar title
+        text message
+        enum type
+        boolean is_read
+        bigint related_case_id FK
+        timestamp created_at
+    }
+    
+    MESSAGE {
+        bigint id PK
+        bigint sender_id FK
+        bigint receiver_id FK
+        bigint case_id FK
+        text content
+        timestamp sent_at
+        boolean is_read
+    }
+```
+
+---
+
+## Verification Plan
+
+### Automated Tests
+```bash
+# Frontend
+cd frontend && npm run build    # Verify build succeeds
+cd frontend && npm run lint     # Check for code quality
+
+# Backend
+cd backend && ./mvnw test       # Run Spring Boot unit tests
+cd backend && ./mvnw spring-boot:run  # Verify server starts
+
+# AI Service
+cd ai-service && python -m pytest  # Run FastAPI tests
+cd ai-service && uvicorn main:app  # Verify server starts
+```
+
+### Manual Verification
+- Register as each role (Citizen, Lawyer, Judge, Admin)
+- File a case end-to-end as Citizen
+- Verify AI case classification works
+- Upload and verify documents
+- Test lawyer recommendation search
+- Test case workspace with multiple participants
+- Test messaging between citizen and lawyer
+- Test judge hearing scheduling
+- Verify admin analytics dashboard
+- Test responsive design on mobile viewport
+- Test notification system
+
+### Browser Testing
+- Open the application in browser
+- Walk through the complete user flow for each role
+- Verify all API calls succeed
+- Check responsive design
+
+---
+
+## Estimated Build Order
+
+| Phase | Deliverables | Key Files |
+|-------|-------------|-----------|
+| **Phase 1** | Auth, Dashboards, Case Filing, DB | ~40 files |
+| **Phase 2** | AI Classification, Documents, Chatbot | ~15 files |
+| **Phase 3** | Lawyer Search, Court Map | ~10 files |
+| **Phase 4** | Case Workspace, Chat, Notifications | ~15 files |
+| **Phase 5** | Judge Portal, Hearings | ~8 files |
+| **Phase 6** | Admin Panel, Analytics | ~10 files |
+| **Phase 7** | Voice, Summarization, Risk Analysis | ~8 files |
+
+**Total: ~106 files across 3 services**
+
+---
+
+## Key Design Decisions
+
+1. **Monorepo Structure** — All 3 services (frontend, backend, ai-service) in one project directory for easy management
+2. **JWT-based Auth** — Stateless authentication, tokens stored in `localStorage` with refresh mechanism
+3. **Role-Based Routing** — React Router with protected routes per role
+4. **Case Number Format** — `CASE-{YEAR}-{CATEGORY_CODE}-{SEQUENCE}` (e.g., `CASE-2026-CIV-000001`)
+5. **WebSocket for Real-time** — Chat and notifications use WebSocket (STOMP over SockJS)
+6. **File Storage** — Local filesystem with structured folders per case (swappable to S3)
+7. **AI Integration** — Spring Boot proxies requests to FastAPI; fallback mock responses when AI service is down
+8. **Responsive Design** — Mobile-first approach with Tailwind breakpoints
