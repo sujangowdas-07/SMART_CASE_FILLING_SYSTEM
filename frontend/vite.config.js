@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  base: '/SMART_CASE_FILLING_SYSTEM/',
   server: {
     port: 3000,
     proxy: {
